@@ -333,7 +333,11 @@ class S2CellId {
         else {
             $newLsb = self::lowestOnBitForLevel($level);
         }
-        return new S2CellId(($this->id & -$newLsb) | $newLsb);
+
+        //        return new S2CellId(($this->id & -$newLsb) | $newLsb);
+        // avoid both precision problem if php.ini precision is low and overflow of high numbers
+        $newId = gmp_or(gmp_and(sprintf("%.0f", $this->id), -$newLsb . ''), $newLsb . '');
+        return new S2CellId($newId);
     }
 
     // Iterator-style methods for traversing the immediate children of a cell or
@@ -687,7 +691,9 @@ class S2CellId {
             $bits = self::getBits($n, $i, $j, $k, $bits);
         }
 
-        $s = new S2CellId(((($n[1] << 32) + $n[0]) << 1) + 1);
+//        $s = new S2CellId(((($n[1] << 32) + $n[0]) << 1) + 1);
+        // bigintegers compatible
+        $s = new S2CellId((((((float)$n[1]) * pow(2, 32)) + $n[0]) * 2) + 1);
         return $s;
     }
 
